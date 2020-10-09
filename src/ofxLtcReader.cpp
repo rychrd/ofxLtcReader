@@ -129,7 +129,7 @@ bool ofxLtcReader::setup(ofSoundStream *snd, int frameRate){
     tab = new sample_t[bufferSize];
     int sampleRate = snd->getSampleRate();
     double framesPerSec = frameRate;
-    sample_t sound[bufferSize];
+    vector<sample_t> sound(bufferSize);
     size_t n;
     int printMissingFrameInfo;
     fps = FR_create(1, 1, FRF_NONE);
