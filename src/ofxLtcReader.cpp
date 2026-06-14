@@ -148,6 +148,19 @@ bool ofxLtcReader::setup(ofSoundStream *snd, int frameRate){
 
 bool ofxLtcReader::readLtc(float * input, int numberOfChannel, int channelId){
     if((channelId > numberOfChannel) || (channelId == 0)) return 0;
+    
+    // --- Squelch for mic noise
+    float peak = 0.0f;
+    for (int i = 0; i < bufferSize; i++) {
+        float sample = abs(input[i * numberOfChannel + (channelId - 1)]);
+        if (sample > peak) peak = sample;
+    }
+    // Set volume limit at 5%
+    if (peak < 0.05f) {
+        return 0;
+    }
+    // --- end of squelch
+
     for(int i = 0; i < bufferSize ; i++){
         tab[i] = input[i*numberOfChannel + (channelId-1)];
     }
@@ -219,6 +232,8 @@ int ofxLtcReader::audio_to_biphase(SMPTEDecoder *d, sample_t *sound, unsigned ch
             // There is a state change at sound[i]
             // If the sample count has risen above the biphase length limit
             if (d->soundToBiphaseCnt > d->soundToBiphaseLimit) {
+                // buf overflow guard
+                if (j >= 1022) break;
                 // single state change within a biphase priod => will decode to a 0
                 offset[j] = i;
                 biphase[j++] = d->soundToBiphaseState;
